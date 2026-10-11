@@ -315,6 +315,15 @@ static void connect_callback(uint16_t conn_handle)
     }
 
     Serial.println();
+
+    Serial.print("interval = ");
+    Serial.print(connection->getConnectionInterval());
+    Serial.print("  latency = ");
+    Serial.print(connection->getSlaveLatency());
+    Serial.print("  mtu = ");
+    Serial.print(connection->getMtu());
+    Serial.print("  data length = ");
+    Serial.println(connection->getDataLength());
 }
 
 
@@ -420,8 +429,25 @@ void setup()
     /*
      * Initialize the Bluefruit BLE stack in peripheral mode.
      */
+
+    /*
+     * Change event length back to 3 if sample packet Tx intervals
+     * increase. They should be ~10ms
+     */
+    Bluefruit.configPrphConn(
+        BLE_GATT_ATT_MTU_DEFAULT,             // 23 bytes
+        //BLE_GAP_EVENT_LENGTH_DEFAULT,         // 3 = 3.75 ms
+        BLE_GAP_EVENT_LENGTH_MIN,       // 2 = 2.5 ms
+        2,                                    // 2 notification TX buffers
+        BLE_GATTC_WRITE_CMD_TX_QUEUE_SIZE_DEFAULT
+    );
+
     Bluefruit.begin();
 
+    Bluefruit.Periph.setConnInterval(
+        6,  // min: 6 × 1.25 ms = 7.5 ms
+        8   // max: 8 × 1.25 ms = 10 ms
+    );
     Bluefruit.setTxPower(4);
     Bluefruit.setName("XIAO-IMU");
 
